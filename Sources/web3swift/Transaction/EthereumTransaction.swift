@@ -70,7 +70,6 @@ public struct EthereumTransaction: CustomStringConvertible {
         self.to = to
     }
     
-    
     public init (nonce: BigUInt, gasPrice: BigUInt, gasLimit: BigUInt, to: EthereumAddress, value: BigUInt, data: Data, v: BigUInt, r: BigUInt, s: BigUInt) {
         self.nonce = nonce
         self.gasPrice = gasPrice
@@ -177,8 +176,8 @@ public struct EthereumTransaction: CustomStringConvertible {
                 return RLP.encode(fields)
             }
         } else {
-            let fields = [self.nonce, self.gasPrice, self.gasLimit, self.to.addressData, self.value!, self.data, self.v, self.r, self.s] as [AnyObject]
-            return RLP.encode(fields)
+                let fields = [self.nonce, self.gasPrice, self.gasLimit, self.to.addressData, self.value!, self.data, self.v, self.r, self.s] as [AnyObject]
+                return RLP.encode(fields)
         }
     }
     
@@ -276,17 +275,28 @@ public struct EthereumTransaction: CustomStringConvertible {
         return request
     }
     
-    static func createRawTransaction(transaction: EthereumTransaction) -> JSONRPCrequest? {
-        guard transaction.sender != nil else {return nil}
-        guard let encodedData = transaction.encode() else {return nil}
-        let hex = encodedData.toHexString().addHexPrefix().lowercased()
-        var request = JSONRPCrequest()
-        request.method = JSONRPCmethod.sendRawTransaction
-        let params = [hex] as Array<Encodable>
-        let pars = JSONRPCparams(params: params)
-        request.params = pars
-        if !request.isValid {return nil}
-        return request
+    static func createRawTransaction(transaction: EthereumTransaction, transactionEncodeData: Data? = nil) -> JSONRPCrequest? {
+        if transactionEncodeData != nil {
+            let hex = transactionEncodeData!.toHexString().addHexPrefix().lowercased()
+            var request = JSONRPCrequest()
+            request.method = JSONRPCmethod.sendRawTransaction
+            let params = [hex] as Array<Encodable>
+            let pars = JSONRPCparams(params: params)
+            request.params = pars
+            if !request.isValid {return nil}
+            return request
+        } else {
+            guard transaction.sender != nil else {return nil}
+            guard let encodedData = transaction.encode() else {return nil}
+            let hex = encodedData.toHexString().addHexPrefix().lowercased()
+            var request = JSONRPCrequest()
+            request.method = JSONRPCmethod.sendRawTransaction
+            let params = [hex] as Array<Encodable>
+            let pars = JSONRPCparams(params: params)
+            request.params = pars
+            if !request.isValid {return nil}
+            return request
+        }
     }
 }
 
